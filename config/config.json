@@ -1,0 +1,94 @@
+{
+  "general": {
+    "secure": false,
+    "defaultRelayProxy": "https://proxy.golang.org"
+  },
+  "phases": {
+    "receive": {
+      "default": {
+        "kind": "default"
+      }
+    },
+    "prefetch": {
+      "redirectPrivates": {
+        "kind": "private",
+        "config": {
+          "modules": {
+            "private.com/(.*)": true,
+            "http.org/.*": true,
+            "ssh.org/.*": true
+          }
+        }
+      },
+      "rewriteModules": {
+        "kind": "rewrite",
+        "config": {
+          "modules": {
+            "customRepo/(.*)": "toto.org/${1}"
+          }
+        }
+      },
+      "setVcs": {
+        "kind": "vcs",
+        "config": {
+          "modules": {
+            "toto.org/(.*)/(.*)": {
+              "url": "git+http://github.com/${1}/${2}",
+              "auth": {}
+            },
+            "ssh.org/(.*)": {
+              "url": "git+ssh://localhost:22/${1}",
+              "auth": {
+                "type": "privateKey",
+                "password": "",
+                "username": "git",
+                "privateKey": "id_rsa"
+              }
+            },
+            "http.org/(.*)": {
+              "url": "git+http://localhost:3000/${1}",
+              "auth": {
+                "type": "basic",
+                "username": "test",
+                "password": "abc"
+              }
+            }
+          }
+        }
+      },
+      "default": {
+        "kind": "default"
+      }
+    },
+    "fetch": {
+      "checkCache": {
+        "kind": "disk-caching",
+        "config": {
+          "path": "/gomods/cache/",
+          "createDir": true
+        }
+      },
+      "default": {
+        "kind": "default"
+      }
+    },
+    "package": {
+      "default": {
+        "kind": "default"
+      }
+    },
+    "cache": {
+      "cacheToDisk": {
+        "kind": "disk-caching",
+        "config": {
+          "path": "/gomods/cache/",
+          "createDir": true,
+          "expiration": -1
+        }
+      },
+      "default": {
+        "kind": "default"
+      }
+    }
+  }
+}

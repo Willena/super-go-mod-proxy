@@ -1,0 +1,9 @@
+GET http://localhost:8080/private.com/willena/sdjfsdf/@v/v1.1.0.mod
+###
+GET http://localhost:8080/private.com/willena/sdjfsdf/@v/v1.1.0.info
+###
+GET http://localhost:8080/private.com/willena/sdjfsdf/@v/v1.1.0.zip
+###
+GET http://localhost:8080/customRepo/tutu/tata/@v/v1.1.0.zip
+###
+GET http://localhost:8080/golang/pkt/x/@v/v1.1.0.zip

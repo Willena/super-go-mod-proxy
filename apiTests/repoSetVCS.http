@@ -1,0 +1,22 @@
+GET http://localhost:8080/customRepo/test/publicRepo/@v/list
+###
+GET http://localhost:8080/customRepo/test/privateRepo/@v/list
+###
+GET http://localhost:8080/customRepo/willena/influxqb/@v/list
+###
+GET http://localhost:8080/customRepo/willena/influxqb/@v/v1.0.0.mod
+###
+GET http://localhost:8080/customRepo/willena/influxqb/@v/v1.0.0.zip
+###
+GET http://localhost:8080/customRepo/willena/influxqb/@v/v1.0.0.info
+###
+
+GET http://localhost:8080/ssh.org/test/publicRepo/@v/v1.1.0.info
+###
+GET http://localhost:8080/http.org/test/publicRepo/@v/v1.1.0.info
+###
+
+GET http://localhost:8080/ssh.org/test/privateRepo/@v/v1.1.0.info
+###
+GET http://localhost:8080/http.org/test/privateRepo/@v/v1.1.0.info
+###

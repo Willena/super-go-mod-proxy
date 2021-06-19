@@ -1,0 +1,5 @@
+GET http://localhost:8080/github.com/willena/sdjfsdf/@v/v1.1.0.info
+###
+GET http://localhost:8080/github.com/willena/influxqb/@v/v1.1.0.info
+###
+GET http://localhost:8080/github.com/gorilla/mux/@v/v1.3.0.info
