@@ -11,26 +11,19 @@ import (
 var logger, _ = zap.NewDevelopment()
 
 var availablePlugins = map[string]types.PluginInitializationFunction{
-	"rewrite":      NewRewritePlugin,
-	"private":      NewPrivatePlugin,
-	"vcs":          NewVcsPlugin,
-	"s3-caching":   NewS3CachingPlugin,
-	"disk-caching": NewDiskCachingPlugin,
-	"default":      NewDefaultPlugin,
+	"rewrite": NewRewritePlugin,
+	"private": NewPrivatePlugin,
+	"vcs":     NewVcsPlugin,
+	"default": NewDefaultPlugin,
 }
 
 func CreateFromConfig(config *config.Config) *types.PhasesPluginsInstance {
 	logger.Info("Instantiate plugins for main Runner")
-	var phasesPlugins types.PhasesPluginsInstance
-
-	//For each Phase
-	phasesPlugins.Receive = LoadPlugins(types.PhaseReceive, config.Phases.Receive)
-	phasesPlugins.PreFetch = LoadPlugins(types.PhasePreFetch, config.Phases.PreFetch)
-	phasesPlugins.Fetch = LoadPlugins(types.PhaseFetch, config.Phases.Fetch)
-	phasesPlugins.Package = LoadPlugins(types.PhasePackage, config.Phases.Package)
-	phasesPlugins.Cache = LoadPlugins(types.PhaseCache, config.Phases.Cache)
-
-	return &phasesPlugins
+	return &types.PhasesPluginsInstance{
+		Receive:  LoadPlugins(types.PhaseReceive, config.Phases.Receive),
+		PreFetch: LoadPlugins(types.PhasePreFetch, config.Phases.PreFetch),
+		Fetch:    LoadPlugins(types.PhaseFetch, config.Phases.Fetch),
+	}
 
 }
 

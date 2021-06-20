@@ -2,6 +2,8 @@ package fetchMethods
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -16,7 +18,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -67,6 +68,34 @@ func (g *Git) GetLatestVersion(module string) (string, error) {
 	panic("implement me")
 }
 
+func (g *Git) downloadRepo(module, version string) (*git.Repository, *git.Worktree, error) {
+	auth, err := g.getAuth()
+	if err != nil {
+		logger.Error("Error while preparing authentication", zap.Error(err))
+		return nil, nil, err
+	}
+
+	r, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
+		URL:           g.Url,
+		Auth:          auth,
+		Depth:         1,
+		ReferenceName: plumbing.ReferenceName("refs/tags/" + version),
+	})
+
+	if err != nil {
+		logger.Error("Ref not found", zap.Error(err))
+		return nil, nil, err
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		logger.Error("GITERR", zap.Error(err))
+		return nil, nil, err
+	}
+
+	return r, w, nil
+}
+
 func (g *Git) getAuth() (transport.AuthMethod, error) {
 	switch g.Auth.Type {
 	case "privateKey":
@@ -102,34 +131,16 @@ func (g *Git) getAuth() (transport.AuthMethod, error) {
 }
 
 func (g *Git) GetModule(module string, version string) (string, error) {
-	modulePath := path.Join(os.TempDir(), module, version)
-	os.MkdirAll(modulePath, 0777)
 
-	//Todo: avoid doing that !
-	os.RemoveAll(modulePath)
-
-	auth, err := g.getAuth()
+	_, w, err := g.downloadRepo(module, version)
 	if err != nil {
-		logger.Error("Error while preparing authentication", zap.Error(err))
+		logger.Error(err.Error())
 		return "", err
 	}
 
-	r, err := git.PlainClone(modulePath, false, &git.CloneOptions{
-		URL:           g.Url,
-		Auth:          auth,
-		Depth:         1,
-		ReferenceName: plumbing.ReferenceName("refs/tags/" + version),
-	})
-
-	if err != nil {
-		logger.Error("Ref not found", zap.Error(err))
-		return "", err
-	}
-
-	w, err := r.Worktree()
-	if err != nil {
-		logger.Error("GITERR", zap.Error(err))
-		return "", err
+	if _, err := w.Filesystem.Stat("go.mod"); os.IsNotExist(err) {
+		logger.Warn("No go.mod file found, return default go.mod")
+		return fmt.Sprintf("module %s", module), nil
 	}
 
 	f, err := w.Filesystem.Open("go.mod")
@@ -137,8 +148,8 @@ func (g *Git) GetModule(module string, version string) (string, error) {
 		logger.Error("Coudl not open go.mod file")
 		return "", err
 	}
-	d, err := io.ReadAll(f)
 
+	d, err := io.ReadAll(f)
 	if err != nil {
 		logger.Error("Error while reading go.mod file !")
 	}
@@ -155,16 +166,9 @@ func (g *Git) GetVersionInfo(module string, version string) (string, error) {
 		Time    time.Time // commit time
 	}
 
-	_, err := g.GetModule(module, version)
+	r, _, err := g.downloadRepo(module, version)
 	if err != nil {
-		logger.Error("Could get module", zap.String("module", module), zap.String("version", version))
-		return "", err
-	}
-
-	pathGit := path.Join(os.TempDir(), module, version)
-	r, err := git.PlainOpen(pathGit)
-	if err != nil {
-		logger.Error("Could not open repo for module", zap.String("module", module), zap.String("version", version))
+		logger.Error(err.Error())
 		return "", err
 	}
 
@@ -186,9 +190,9 @@ func (g *Git) GetVersionInfo(module string, version string) (string, error) {
 
 func (g *Git) GetZipFile(module string, version string) (io.Reader, error) {
 
-	_, err := g.GetModule(module, version)
+	_, w, err := g.downloadRepo(module, version)
 
-	buff, err := modulezip.ZipModule(module, version)
+	buff, err := modulezip.ZipModule(w.Filesystem, module, version)
 
 	return buff, err
 }

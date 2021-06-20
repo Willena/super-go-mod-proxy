@@ -40,8 +40,6 @@ steps done to collect a gomodule.
 * `Receive` : when the request is received
 * `Prefetch`: just before fetching the content
 * `Fetch`: when downloading / getting the content
-* `Package`: Stage used if a special repackaging is needed
-* `Cache`: Save the content in the proxy cache
 
 In each phase one or more plugins can be used, given they do something for that phase.
 
@@ -72,6 +70,4 @@ This might be usefull in private environnement where the domain used is not wher
 hosted. For example, module name would be something like `myCompany.com/myGroup/module` and the repository is located at 
 `http://git.private.local/myGroup/module`. This is then transparent for the go client. 
 
-#### DiskCaching plugin
-
-Save fetched result to local disk in order to avoid re-downloading the content from the remote if nothing changed. Can 
+ 

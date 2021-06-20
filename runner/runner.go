@@ -50,15 +50,5 @@ func (r *Runner) Run(w http.ResponseWriter) error {
 		return nil
 	}
 
-	logger.With(zap.Any("context", r.runContext)).Info("Phase Package...")
-	if r.runPhase(types.PhasePackage, r.plugins.Package, w) {
-		return nil
-	}
-
-	logger.With(zap.Any("context", r.runContext)).Info("Phase Cache...")
-	if r.runPhase(types.PhaseCache, r.plugins.Cache, w) {
-		return nil
-	}
-
 	return nil
 }

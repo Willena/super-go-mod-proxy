@@ -27,13 +27,15 @@ var configFile = flag.String("config", "config.json", "Configuration file for su
 
 func main() {
 	defer logger.Sync()
+	var err error
 	flag.Parse()
 	logger.Info("Starting Super-Go-Pro")
 
-	mainConfig, err := config.LoadConfig(*configFile)
+	mainConfig, err = config.LoadConfig(*configFile)
 	if err != nil {
 		return
 	}
+
 	pluginsInstances = plugins.CreateFromConfig(mainConfig)
 
 	r := mux.NewRouter()
@@ -88,7 +90,7 @@ func StatusHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	res, _ := json.Marshal(map[string]interface{}{
 		"status":        "OK",
-		"moduleVersion": "0.0.1",
+		"moduleVersion": "0.0.2",
 		"uptime":        time.Now().Sub(started).Seconds(),
 	})
 	writer.Write(res)

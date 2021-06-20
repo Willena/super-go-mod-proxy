@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210512092938-c05353c2d58c // indirect
+	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kevinburke/ssh_config v1.1.0 // indirect

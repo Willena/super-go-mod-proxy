@@ -40,21 +40,7 @@ func (receiver *DefaultPlugin) RunPhase(context *types.RunnerContext, w http.Res
 		return doPrefetch(context, w)
 	case types.PhaseFetch:
 		return doFetch(context, w)
-	case types.PhasePackage:
-		return doPackage(context, w)
-	case types.PhaseCache:
-		return doCache(context, w)
 	}
-	return false
-}
-
-func doCache(context *types.RunnerContext, w http.ResponseWriter) bool {
-	logger.Debug("Running default->cache phase...")
-	return false
-}
-
-func doPackage(context *types.RunnerContext, w http.ResponseWriter) bool {
-	logger.Debug("Running default->package phase...")
 	return false
 }
 

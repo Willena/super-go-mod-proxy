@@ -4,26 +4,24 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"github.com/go-git/go-billy/v5"
 	"go.uber.org/zap"
 	"io"
 	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 )
 
 var logger, _ = zap.NewDevelopment()
 
-func ZipModule(module string, version string) (io.Reader, error) {
+func ZipModule(filesystem billy.Filesystem, module string, version string) (io.Reader, error) {
 	logger.Info("Creating a zip file with module files... ", zap.String("module", module), zap.String("version", version))
 	buf := new(bytes.Buffer)
 	// Create a new zip archive.
 	w := zip.NewWriter(buf)
 	// Add some files to the archive.
 
-	path.Join(os.TempDir(), module, version)
-
-	err := addFiles(w, path.Join(os.TempDir(), module, version), fmt.Sprintf("%s@%s", module, version))
+	err := addFiles(w, filesystem, filesystem.Root(), fmt.Sprintf("%s@%s", module, version))
 	if err != nil {
 		logger.Error("Error while creating zip", zap.Error(err))
 		return nil, err
@@ -39,9 +37,9 @@ func ZipModule(module string, version string) (io.Reader, error) {
 	return buf, nil
 }
 
-func addFiles(w *zip.Writer, basePath, baseInZip string) error {
+func addFiles(w *zip.Writer, filesystem billy.Filesystem, basePath string, baseInZip string) error {
 	// Open the Directory
-	files, err := ioutil.ReadDir(basePath)
+	files, err := filesystem.ReadDir(basePath)
 	if err != nil {
 		return err
 	}
@@ -57,7 +55,12 @@ func addFiles(w *zip.Writer, basePath, baseInZip string) error {
 		logger.Debug(fmt.Sprintf("Adding file: %s -> %s", pathFile, pathZip))
 
 		if !file.IsDir() {
-			dat, err := ioutil.ReadFile(pathFile)
+			reader, err := filesystem.Open(pathFile)
+			if err != nil {
+				return err
+			}
+
+			dat, err := ioutil.ReadAll(reader)
 			if err != nil {
 				return err
 			}
@@ -73,11 +76,12 @@ func addFiles(w *zip.Writer, basePath, baseInZip string) error {
 			}
 		} else if file.IsDir() {
 			// Recurse
-			newBase := pathFile + "/"
+			newBase := path.Join(pathFile, "")
+			newPathZip := path.Join(pathZip, "")
 			fmt.Println("Recursing and Adding SubDir: " + file.Name())
 			fmt.Println("Recursing and Adding SubDir: " + newBase)
 
-			err := addFiles(w, newBase, pathZip+"/")
+			err := addFiles(w, filesystem, newBase, newPathZip)
 			if err != nil {
 				return err
 			}

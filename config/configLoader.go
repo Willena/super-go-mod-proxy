@@ -10,8 +10,8 @@ import (
 var logger, _ = zap.NewDevelopment()
 
 type Config struct {
-	General *AppConfig           `json:"general"`
-	Phases  *PhasesConfiguration `json:"phases"`
+	General AppConfig           `json:"general"`
+	Phases  PhasesConfiguration `json:"phases"`
 }
 
 type AppConfig struct {
@@ -31,8 +31,6 @@ type PhasesConfiguration struct {
 	Receive  PluginsDefinitions `json:"receive,omitempty"`
 	PreFetch PluginsDefinitions `json:"prefetch,omitempty"`
 	Fetch    PluginsDefinitions `json:"fetch,omitempty"`
-	Package  PluginsDefinitions `json:"package,omitempty"`
-	Cache    PluginsDefinitions `json:"cache,omitempty"`
 }
 
 func LoadConfig(path string) (*Config, error) {

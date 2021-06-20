@@ -61,31 +61,6 @@
       }
     },
     "fetch": {
-      "checkCache": {
-        "kind": "disk-caching",
-        "config": {
-          "path": "/gomods/cache/",
-          "createDir": true
-        }
-      },
-      "default": {
-        "kind": "default"
-      }
-    },
-    "package": {
-      "default": {
-        "kind": "default"
-      }
-    },
-    "cache": {
-      "cacheToDisk": {
-        "kind": "disk-caching",
-        "config": {
-          "path": "/gomods/cache/",
-          "createDir": true,
-          "expiration": -1
-        }
-      },
       "default": {
         "kind": "default"
       }

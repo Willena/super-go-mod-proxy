@@ -13,8 +13,6 @@ const (
 	PhaseReceive Phase = iota
 	PhasePreFetch
 	PhaseFetch
-	PhasePackage
-	PhaseCache
 )
 
 type Action int

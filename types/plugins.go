@@ -11,8 +11,6 @@ type PhasesPluginsInstance struct {
 	Receive  PluginInstances
 	PreFetch PluginInstances
 	Fetch    PluginInstances
-	Package  PluginInstances
-	Cache    PluginInstances
 }
 type PluginInitializationFunction func() PluginInstance
 
