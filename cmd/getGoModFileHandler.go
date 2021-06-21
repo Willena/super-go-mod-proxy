@@ -10,28 +10,22 @@ import (
 )
 
 func ModVersionHandler(writer http.ResponseWriter, request *http.Request) {
-	module, err := moduleName(request)
+	module, err := moduleFromRequest(request)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write(errors.GenerateError(err))
 	}
 
-	version, err := moduleVersion(request)
-	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(errors.GenerateError(err))
-	}
-	logger.Debug("Getting go mod file for module ", zap.String("moduleName", module), zap.String("version", version))
+	logger.Debug("Getting go mod file for module ", zap.String("moduleFromRequest", module.Path), zap.String("version", module.Version.String()))
 
 	err = runner.NewRunner(&types.RunnerContext{
 		GoModule:    module,
-		Version:     version,
 		FetchMethod: &fetchMethods.GoProxy{Url: mainConfig.General.DefaultRelayProxy},
 		Action:      types.ActionGetModFile,
 	}, pluginsInstances).Run(writer)
 
 	if err != nil {
-		logger.Error("Error while go.mod file for module", zap.String("module", module), zap.Error(err))
+		logger.Error("Error while go.mod file for module", zap.String("module", module.Path), zap.Error(err))
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -13,6 +13,7 @@ require (
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
+	github.com/stretchr/testify v1.7.0 // indirect
 	go.uber.org/atomic v1.8.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.17.0 // indirect

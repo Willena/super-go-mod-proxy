@@ -35,9 +35,9 @@ func (receiver *PrivatePlugin) RunPhase(context *types.RunnerContext, w http.Res
 	switch receiver.Phase {
 	case types.PhasePreFetch:
 		for _, v := range receiver.privateMatchers {
-			if v.MatchString(context.GoModule) {
-				logger.Info("Found matching private module", zap.String("module", context.GoModule), zap.Any("Regexp", v))
-				context.FetchMethod = &fetchMethods.Git{Url: fmt.Sprintf("git+https://%s", context.GoModule)}
+			if v.MatchString(context.GoModule.Path) {
+				logger.Info("Found matching private module", zap.String("module", context.GoModule.Path), zap.Any("Regexp", v))
+				context.FetchMethod = &fetchMethods.Git{Url: fmt.Sprintf("git+https://%s", context.GoModule.Path)}
 				return false
 			}
 		}

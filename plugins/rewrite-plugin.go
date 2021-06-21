@@ -33,11 +33,11 @@ func (receiver *RewritePlugin) RunPhase(context *types.RunnerContext, w http.Res
 	case types.PhasePreFetch:
 
 		for regex, replacement := range receiver.rewriteReplacements {
-			old := context.GoModule
-			context.GoModule = regex.ReplaceAllString(context.GoModule, replacement)
-			if old != context.GoModule {
+			old := context.GoModule.Path
+			context.GoModule.Path = regex.ReplaceAllString(context.GoModule.Path, replacement)
+			if old != context.GoModule.Path {
 				logger.
-					With(zap.String("from", old), zap.String("to", context.GoModule),
+					With(zap.String("from", old), zap.String("to", context.GoModule.Path),
 						zap.Any("withFind", regex), zap.String("replacement", replacement)).
 					Debug("Rewritten gomodule")
 			}

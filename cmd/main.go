@@ -18,6 +18,8 @@ import (
 	"time"
 )
 
+const VERSION = "0.0.3"
+
 var logger, _ = zap.NewDevelopment()
 var started = time.Now()
 
@@ -42,14 +44,7 @@ func main() {
 	pluginsInstances = plugins.CreateFromConfig(mainConfig)
 
 	r := mux.NewRouter()
-	r.Handle("/metrics", promhttp.Handler())
-	r.HandleFunc("/", StatusHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/list", ListVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.info", InfoVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.mod", ModVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.zip", ZipVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@latest", LatestVersionHandler).Methods("GET")
-	http.Handle("/", r)
+	RegisterRoutes(r)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", *listen, *port),
@@ -88,12 +83,23 @@ func main() {
 	log.Println("shutting down")
 	os.Exit(0)
 }
+func RegisterRoutes(r *mux.Router) {
+	r.Handle("/metrics", promhttp.Handler())
+	r.HandleFunc("/", StatusHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/list", ListVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.info", InfoVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.mod", ModVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.zip", ZipVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@latest", LatestVersionHandler).Methods("GET")
+	http.Handle("/", r)
+}
 
 func StatusHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 	res, _ := json.Marshal(map[string]interface{}{
+		"appName":       "super-go-proxy",
 		"status":        "OK",
-		"moduleVersion": "0.0.2",
+		"moduleVersion": VERSION,
 		"uptime":        time.Now().Sub(started).Seconds(),
 	})
 	writer.Write(res)

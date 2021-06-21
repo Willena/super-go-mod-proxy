@@ -2,4 +2,10 @@ GET http://localhost:8080/github.com/willena/sdjfsdf/@v/v1.1.0.zip
 ###
 GET http://localhost:8080/github.com/willena/influxqb/@v/v1.1.0.zip
 ###
+GET http://localhost:8080/github.com/willena/influxqb/@v/v1.0.0.zip
+###
 GET http://localhost:8080/github.com/gorilla/mux/@v/v1.3.0.zip
+###
+GET http://localhost:8080/http.org/test/publicRepo/@v/master.zip
+###
+GET http://localhost:8080/http.org/test/privateRepo/@v/master.zip

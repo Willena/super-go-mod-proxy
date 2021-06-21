@@ -62,7 +62,7 @@ func doFetch(context *types.RunnerContext, w http.ResponseWriter) bool {
 		}
 		return true
 	case types.ActionGetVersionInfo:
-		json, err := context.FetchMethod.GetVersionInfo(context.GoModule, context.Version)
+		json, err := context.FetchMethod.GetVersionInfo(context.GoModule)
 		if err != nil {
 			logger.Error("Error while fetching version information", zap.Error(err))
 			w.WriteHeader(http.StatusGone)
@@ -77,7 +77,7 @@ func doFetch(context *types.RunnerContext, w http.ResponseWriter) bool {
 
 		return true
 	case types.ActionGetModFile:
-		text, err := context.FetchMethod.GetModule(context.GoModule, context.Version)
+		text, err := context.FetchMethod.GetModule(nil)
 		if err != nil {
 			logger.Error("Error while fetching version information", zap.Error(err))
 			w.WriteHeader(http.StatusGone)
@@ -91,7 +91,7 @@ func doFetch(context *types.RunnerContext, w http.ResponseWriter) bool {
 
 		return true
 	case types.ActionGetModuleZip:
-		read, err := context.FetchMethod.GetZipFile(context.GoModule, context.Version)
+		read, err := context.FetchMethod.GetZipFile(context.GoModule)
 		if err != nil {
 			logger.Error("Error while fetching version information", zap.Error(err))
 			w.WriteHeader(http.StatusGone)

@@ -62,16 +62,16 @@ func (receiver *VcsPlugin) RunPhase(context *types.RunnerContext, w http.Respons
 	case types.PhasePreFetch:
 
 		for r, s := range receiver.vcsReplacements {
-			if r.MatchString(context.GoModule) {
-				replacement := r.ReplaceAllString(context.GoModule, s.Url)
+			if r.MatchString(context.GoModule.Path) {
+				replacement := r.ReplaceAllString(context.GoModule.Path, s.Url)
 				logger.
-					With(zap.String("module", context.GoModule), zap.Any("regex", r), zap.String("replacement", replacement)).
+					With(zap.String("module", context.GoModule.Path), zap.Any("regex", r), zap.String("replacement", replacement)).
 					Info("VCS URL has been updated")
 
 				method, err := fetchMethods.FindForUrl(replacement, s.AuthConfiguration)
 				if err != nil {
 					logger.
-						With(zap.String("module", context.GoModule), zap.String("url", replacement)).
+						With(zap.String("module", context.GoModule.Path), zap.String("url", replacement)).
 						Error("Could not find suitable fetch method ! ", zap.Error(err))
 				}
 

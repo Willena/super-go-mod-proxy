@@ -2,8 +2,10 @@ package fetchMethods
 
 import (
 	"fmt"
+	"github.com/Masterminds/semver"
 	"github.com/willena/super-go-mod-proxy/types"
 	"go.uber.org/zap"
+	"sort"
 	"strings"
 )
 
@@ -23,5 +25,24 @@ func FindForUrl(url string, authConfig types.AuthConfiguration) (types.FetchMeth
 	}
 
 	return nil, fmt.Errorf("Method not found !")
+}
 
+func sortTags(tags []string) []string {
+	vs := make([]*semver.Version, 0)
+	sortedTags := make([]string, len(tags))
+	for _, r := range tags {
+		v, err := semver.NewVersion(r)
+		if err != nil {
+			logger.Warn("Error parsing version", zap.String("error", err.Error()), zap.String("version", r))
+			continue
+		}
+		vs = append(vs, v)
+	}
+	sort.Sort(semver.Collection(vs))
+
+	for i, v := range vs {
+		sortedTags[i] = v.Original()
+	}
+
+	return sortedTags
 }

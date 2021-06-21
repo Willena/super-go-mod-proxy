@@ -1,12 +1,15 @@
 package types
 
-import "io"
+import (
+	"github.com/willena/super-go-mod-proxy/gomodule"
+	"io"
+)
 
 type FetchMethod interface {
-	GetVersions(module string) ([]string, error)
-	GetLatestVersion(module string) (string, error)
-	GetModule(module string, version string) (string, error)
-	GetVersionInfo(module string, version string) (string, error)
-	GetZipFile(module string, version string) (io.Reader, error)
+	GetVersions(module *gomodule.GoModule) ([]string, error)
+	GetLatestVersion(module *gomodule.GoModule) (string, error)
+	GetModule(module *gomodule.GoModule) (string, error)
+	GetVersionInfo(module *gomodule.GoModule) (string, error)
+	GetZipFile(module *gomodule.GoModule) (io.Reader, error)
 	Match(url string) bool
 }

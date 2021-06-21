@@ -20,12 +20,13 @@ var (
 
 func ListVersionHandler(writer http.ResponseWriter, request *http.Request) {
 	listVersionCallCounter.Inc()
-	module, err := moduleName(request)
+	module, err := moduleFromRequest(request)
+
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write(errors.GenerateError(err))
 	}
-	logger.Debug("Listing moduleVersion for module ", zap.String("moduleName", module))
+	logger.Debug("Listing moduleVersion for module ", zap.String("module", module.Path))
 
 	err = runner.NewRunner(&types.RunnerContext{
 		GoModule:    module,
@@ -34,7 +35,7 @@ func ListVersionHandler(writer http.ResponseWriter, request *http.Request) {
 	}, pluginsInstances).Run(writer)
 
 	if err != nil {
-		logger.Error("Error while collecting versions list for module", zap.String("module", module), zap.Error(err))
+		logger.Error("Error while collecting versions list for module", zap.String("module", module.Path), zap.Error(err))
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -14,14 +14,14 @@ import (
 
 var logger, _ = zap.NewDevelopment()
 
-func ZipModule(filesystem billy.Filesystem, module string, version string) (io.Reader, error) {
-	logger.Info("Creating a zip file with module files... ", zap.String("module", module), zap.String("version", version))
+func ZipModule(filesystem billy.Filesystem, module *GoModule) (io.Reader, error) {
+	logger.Info("Creating a zip file with module files... ", zap.String("module", module.Path), zap.String("version", module.Version.String()))
 	buf := new(bytes.Buffer)
 	// Create a new zip archive.
 	w := zip.NewWriter(buf)
 	// Add some files to the archive.
 
-	err := addFiles(w, filesystem, filesystem.Root(), fmt.Sprintf("%s@%s", module, version))
+	err := addFiles(w, filesystem, filesystem.Root(), fmt.Sprintf("%s@%s", module, module.Version.String()))
 	if err != nil {
 		logger.Error("Error while creating zip", zap.Error(err))
 		return nil, err

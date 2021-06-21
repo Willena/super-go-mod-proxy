@@ -2,7 +2,6 @@ package fetchMethods
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Masterminds/semver"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -21,7 +20,6 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 )
@@ -39,125 +37,44 @@ type Info struct {
 	Time    time.Time // commit time
 }
 
-func (g *Git) GetVersions(module string) ([]string, error) {
-	repo, err := git.Init(memory.NewStorage(), nil)
+func versionInfoFromRepo(r *git.Repository, module *gomodule.GoModule) (string, error) {
+	ref, err := r.Head()
 	if err != nil {
-		logger.Error("GIT ERROR", zap.Error(err))
-		return nil, err
+		logger.Error("Could not get head for module", zap.String("module", module.Path), zap.String("version", module.Version.String()))
+		return "", err
 	}
-
-	remote, err := repo.CreateRemote(&config.RemoteConfig{Name: "main", URLs: []string{g.Url}})
+	obj, err := r.CommitObject(ref.Hash())
 	if err != nil {
-		logger.Error("GIT ERROR", zap.Error(err))
-		return nil, err
-	}
-
-	auth, err := g.getAuth()
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := remote.List(&git.ListOptions{Auth: auth})
-	if err != nil {
-		logger.Error("GIT ERROR", zap.Error(err))
-		return nil, err
-	}
-
-	tags := make([]string, 0)
-	for _, d := range data {
-		if d.Name().IsTag() {
-			if ref := d.Strings()[0][10:]; strings.HasPrefix(ref, "v") {
-				tags = append(tags, ref)
-			}
-		}
-	}
-	logger.With(zap.Any("References", tags)).Info("Found References when calling version ! ")
-
-	vs := make([]*semver.Version, len(tags))
-	for i, r := range tags {
-		v, err := semver.NewVersion(r)
-		if err != nil {
-			logger.Warn("Error parsing version", zap.String("error", err.Error()), zap.String("version", r))
-		}
-		vs[i] = v
-	}
-	sort.Sort(semver.Collection(vs))
-
-	for i, v := range vs {
-		tags[i] = v.Original()
-	}
-
-	return tags, nil
-
-}
-
-func (g *Git) GetLatestVersion(module string) (string, error) {
-	versions, err := g.GetVersions(module)
-	if err != nil {
+		logger.Error("Could not get commit object for module", zap.String("module", module.Path), zap.String("version", module.Version.String()))
 		return "", err
 	}
 
-	if len(versions) > 0 {
-		return g.GetVersionInfo(module, versions[len(versions)-1])
+	var info Info
+	var tagFound string
+	if module.Version == nil || module.Version.Parsed == nil {
+		//No major version given !
+		tagFound, err = findNearestTagInLog(r, ref.Hash())
+		if err != nil || tagFound == "" {
+			logger.Warn("Could not found nearest tag. ")
+			tagFound = "v0.0.0"
+			info = Info{Version: gomodule.FormatAsValidVersionVersion(tagFound, obj, ref, false), Time: obj.Committer.When.UTC()}
+		} else {
+			semVersion, err := semver.NewVersion(tagFound)
+			if err != nil {
+				logger.Error("Tag not valid !")
+				return "", err
+			}
+			nversion := semVersion.IncPatch()
+			nversion, _ = nversion.SetPrerelease("0")
+
+			info = Info{Version: gomodule.FormatAsValidVersionVersion(nversion.String(), obj, ref, true), Time: obj.Committer.When.UTC()}
+		}
 	} else {
-		r, _, err := g.downloadRepo(module, "")
-		if err != nil {
-			logger.Error("Could not download repository", zap.Error(err))
-		}
-
-		ref, err := r.Head()
-		if err != nil {
-			logger.Error("Could not get head for module", zap.String("module", module), zap.String("version", "latest"))
-			return "", err
-		}
-
-		return g.GetVersionInfo(module, ref.Hash().String())
+		info = Info{Version: module.Version.String(), Time: obj.Committer.When.UTC()}
 	}
+	data, err := json.Marshal(info)
 
-}
-
-func (g *Git) downloadRepo(module, version string) (*git.Repository, *git.Worktree, error) {
-	fullVersion := gomodule.ParseFullModuleVersion(version)
-
-	auth, err := g.getAuth()
-	if err != nil {
-		logger.Error("Error while preparing authentication", zap.Error(err))
-		return nil, nil, err
-	}
-
-	var r *git.Repository
-
-	r, err = git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
-		URL:  g.Url,
-		Auth: auth,
-	})
-
-	if err != nil {
-		logger.Error("Could not clone repo", zap.Error(err))
-		return nil, nil, err
-	}
-
-	w, err := r.Worktree()
-	if err != nil {
-		logger.Error("GITERR", zap.Error(err))
-		return nil, nil, err
-	}
-
-	if fullVersion.CommitRef != nil {
-		resolved, err := r.ResolveRevision(plumbing.Revision(fullVersion.CommitRef.Ref))
-		if err != nil {
-			logger.Error("could not resolve revision", zap.String("Resv", fullVersion.CommitRef.Ref))
-			return nil, nil, err
-		}
-		logger.Debug("Collecting checkout to commit", zap.String("commit", resolved.String()))
-		err = w.Checkout(&git.CheckoutOptions{Hash: plumbing.NewHash(resolved.String())})
-		if err != nil {
-			logger.Error("Checkout faild !", zap.String("Hash", fullVersion.CommitRef.Ref))
-			return nil, nil, err
-		}
-	}
-
-	return r, w, nil
+	return string(data), err
 }
 
 func findNearestTagInLog(r *git.Repository, hash plumbing.Hash) (string, error) {
@@ -206,6 +123,110 @@ func findNearestTagInLog(r *git.Repository, hash plumbing.Hash) (string, error) 
 	return tagName, nil
 }
 
+func (g *Git) GetVersions(module *gomodule.GoModule) ([]string, error) {
+	repo, err := git.Init(memory.NewStorage(), nil)
+	if err != nil {
+		logger.Error("GIT ERROR", zap.Error(err))
+		return nil, err
+	}
+
+	remote, err := repo.CreateRemote(&config.RemoteConfig{Name: "main", URLs: []string{g.Url}})
+	if err != nil {
+		logger.Error("GIT ERROR", zap.Error(err))
+		return nil, err
+	}
+
+	auth, err := g.getAuth()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := remote.List(&git.ListOptions{Auth: auth})
+	if err != nil {
+		logger.Error("GIT ERROR", zap.Error(err))
+		return nil, err
+	}
+
+	tags := g.filterInvalidTags(data)
+
+	logger.With(zap.Any("References", tags)).Info("Found References when calling version ! ")
+
+	return sortTags(tags), nil
+
+}
+
+func (g *Git) filterInvalidTags(tags []*plumbing.Reference) []string {
+	resulttags := make([]string, 0)
+	for _, d := range tags {
+		if d.Name().IsTag() {
+			if ref := d.Name().Short(); strings.HasPrefix(ref, "v") {
+				resulttags = append(resulttags, ref)
+			}
+		}
+	}
+	return resulttags
+}
+
+func (g *Git) GetLatestVersion(module *gomodule.GoModule) (string, error) {
+	versions, err := g.GetVersions(module)
+	if err != nil {
+		return "", err
+	}
+
+	if len(versions) > 0 {
+		module.SetVersion(versions[len(versions)-1])
+	} else {
+		module.SetVersion("")
+	}
+
+	return g.GetVersionInfo(module)
+
+}
+
+func (g *Git) downloadRepo(module *gomodule.GoModule) (*git.Repository, *git.Worktree, error) {
+	fullVersion := module.Version
+
+	auth, err := g.getAuth()
+	if err != nil {
+		logger.Error("Error while preparing authentication", zap.Error(err))
+		return nil, nil, err
+	}
+
+	var r *git.Repository
+
+	r, err = git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
+		URL:  g.Url,
+		Auth: auth,
+	})
+
+	if err != nil {
+		logger.Error("Could not clone repo", zap.Error(err))
+		return nil, nil, err
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		logger.Error("GITERR", zap.Error(err))
+		return nil, nil, err
+	}
+
+	if fullVersion != nil && fullVersion.CommitRef != nil {
+		resolved, err := r.ResolveRevision(plumbing.Revision(fullVersion.CommitRef.Ref))
+		if err != nil {
+			logger.Error("could not resolve revision", zap.String("Resv", fullVersion.CommitRef.Ref))
+			return nil, nil, err
+		}
+		logger.Debug("Collecting checkout to commit", zap.String("commit", resolved.String()))
+		err = w.Checkout(&git.CheckoutOptions{Hash: plumbing.NewHash(resolved.String())})
+		if err != nil {
+			logger.Error("Checkout faild !", zap.String("Hash", fullVersion.CommitRef.Ref))
+			return nil, nil, err
+		}
+	}
+
+	return r, w, nil
+}
+
 func (g *Git) getAuth() (transport.AuthMethod, error) {
 	switch g.Auth.Type {
 	case "privateKey":
@@ -240,9 +261,9 @@ func (g *Git) getAuth() (transport.AuthMethod, error) {
 	return nil, nil
 }
 
-func (g *Git) GetModule(module string, version string) (string, error) {
+func (g *Git) GetModule(module *gomodule.GoModule) (string, error) {
 
-	_, w, err := g.downloadRepo(module, version)
+	_, w, err := g.downloadRepo(module)
 	if err != nil {
 		logger.Error(err.Error())
 		return "", err
@@ -250,7 +271,7 @@ func (g *Git) GetModule(module string, version string) (string, error) {
 
 	if _, err := w.Filesystem.Stat("go.mod"); os.IsNotExist(err) {
 		logger.Warn("No go.mod file found, return default go.mod")
-		return fmt.Sprintf("module %s", module), nil
+		return module.MinimalGoModFile(), nil
 	}
 
 	f, err := w.Filesystem.Open("go.mod")
@@ -264,67 +285,30 @@ func (g *Git) GetModule(module string, version string) (string, error) {
 		logger.Error("Error while reading go.mod file !")
 	}
 
-	s := string(d)
-
-	return s, err
+	return string(d), err
 
 }
 
-func (g *Git) GetVersionInfo(module string, version string) (string, error) {
+func (g *Git) GetVersionInfo(module *gomodule.GoModule) (string, error) {
 
-	r, _, err := g.downloadRepo(module, version)
+	r, _, err := g.downloadRepo(module)
 	if err != nil {
 		logger.Error(err.Error())
 		return "", err
 	}
 
-	ref, err := r.Head()
-	if err != nil {
-		logger.Error("Could not get head for module", zap.String("module", module), zap.String("version", version))
-		return "", err
-	}
-	obj, err := r.CommitObject(ref.Hash())
-	if err != nil {
-		logger.Error("Could not get commit object for module", zap.String("module", module), zap.String("version", version))
-		return "", err
-	}
+	return versionInfoFromRepo(r, module)
 
-	versionFull := gomodule.ParseFullModuleVersion(version)
-	var info Info
-	var tagFound string
-	if versionFull.Parsed == nil {
-		//No major version given !
-		tagFound, err = findNearestTagInLog(r, ref.Hash())
-		if err != nil || tagFound == "" {
-			logger.Error("Could not found nearest tag. ")
-			tagFound = "v0.0.0"
-			info = Info{Version: fmt.Sprintf("%s-%s-%s", tagFound, obj.Committer.When.UTC().Format("20060102150405"), ref.Hash().String()[:12]), Time: obj.Committer.When.UTC()}
-		} else {
-			semVersion, err := semver.NewVersion(tagFound)
-			if err != nil {
-				logger.Error("Tag not valid !")
-				return "", err
-			}
-			nversion := semVersion.IncPatch()
-			nversion, _ = nversion.SetPrerelease("0")
-			info = Info{Version: fmt.Sprintf("%s.%s-%s", "v"+nversion.String(), obj.Committer.When.UTC().Format("20060102150405"), ref.Hash().String()[:12]), Time: obj.Committer.When.UTC()}
-		}
-	} else {
-		info = Info{Version: version, Time: obj.Committer.When.UTC()}
-	}
-	data, err := json.Marshal(info)
-
-	return string(data), err
 }
 
-func (g *Git) GetZipFile(module string, version string) (io.Reader, error) {
+func (g *Git) GetZipFile(module *gomodule.GoModule) (io.Reader, error) {
 
-	_, w, err := g.downloadRepo(module, version)
+	_, w, err := g.downloadRepo(module)
 	if err != nil {
 		return nil, err
 	}
 
-	buff, err := gomodule.ZipModule(w.Filesystem, module, version)
+	buff, err := gomodule.ZipModule(w.Filesystem, module)
 
 	return buff, err
 }

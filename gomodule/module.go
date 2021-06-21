@@ -3,12 +3,38 @@ package gomodule
 import (
 	"fmt"
 	"github.com/Masterminds/semver"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"regexp"
 	"strings"
 	"time"
 )
 
+const timeFormat = "20060102150405"
+
 var regexIsHash = regexp.MustCompile("^[0-9a-f]{5,40}$")
+
+func ShortHash(ref *plumbing.Reference) string {
+	return ref.Hash().String()[:12]
+}
+
+func FormatAsValidVersionVersion(version string, commit *object.Commit, ref *plumbing.Reference, pre bool) string {
+
+	if !strings.HasPrefix(version, "v") {
+		version = "v" + version
+	}
+
+	if commit == nil || ref == nil {
+		return version
+	}
+
+	if pre {
+		return fmt.Sprintf("%s.%s-%s", version, commit.Committer.When.UTC().Format(timeFormat), ShortHash(ref))
+	} else {
+		return fmt.Sprintf("%s-%s-%s", version, commit.Committer.When.UTC().Format(timeFormat), ShortHash(ref))
+	}
+
+}
 
 type CommitRef struct {
 	Ref  string
@@ -21,9 +47,26 @@ type FullVersion struct {
 	CommitRef *CommitRef
 }
 
+func (v *FullVersion) String() string {
+	return v.Raw
+}
+
 type GoModule struct {
 	Path    string
-	Version FullVersion
+	Version *FullVersion
+}
+
+func (m *GoModule) SetVersion(s string) {
+	if s == "" {
+		m.Version = nil
+		return
+	}
+
+	m.Version = ParseFullModuleVersion(s)
+}
+
+func (m *GoModule) MinimalGoModFile() string {
+	return fmt.Sprintf("module %s", m.Path)
 }
 
 func (c *CommitRef) IsHash() bool {
@@ -67,5 +110,12 @@ func ParseFullModuleVersion(version string) *FullVersion {
 		Raw:       version,
 		Parsed:    v,
 		CommitRef: parsePrerelease(v.Prerelease()),
+	}
+}
+
+func NewGoModule(name, version string) *GoModule {
+	return &GoModule{
+		Path:    name,
+		Version: ParseFullModuleVersion(version),
 	}
 }

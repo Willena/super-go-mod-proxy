@@ -3,21 +3,18 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/willena/super-go-mod-proxy/gomodule"
 	"net/http"
 )
 
-func moduleName(r *http.Request) (string, error) {
+func moduleFromRequest(r *http.Request) (*gomodule.GoModule, error) {
+	version := "master"
+	if v, ok := mux.Vars(r)["moduleVersion"]; ok {
+		version = v
+	}
 	if module, ok := mux.Vars(r)["module"]; ok {
-		return module, nil
+		return gomodule.NewGoModule(module, version), nil
 	}
 
-	return "", fmt.Errorf("Privided module name is not valid")
-}
-
-func moduleVersion(r *http.Request) (string, error) {
-	if module, ok := mux.Vars(r)["moduleVersion"]; ok {
-		return module, nil
-	}
-
-	return "", fmt.Errorf("Privided moduleVersion is not valid")
+	return nil, fmt.Errorf("Privided module name is not valid")
 }

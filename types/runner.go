@@ -1,10 +1,11 @@
 package types
 
+import "github.com/willena/super-go-mod-proxy/gomodule"
+
 type RunnerContext struct {
-	GoModule    string
+	GoModule    *gomodule.GoModule
 	FetchMethod FetchMethod
 	Action      Action
-	Version     string
 }
 
 type Phase int
