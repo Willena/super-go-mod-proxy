@@ -1,0 +1,16 @@
+###
+GET http://localhost:8080/github.com/gorilla/mux/@latest
+###
+GET http://localhost:8080/golang.org/x/crypto/@latest
+###
+
+GET http://localhost:8080/ssh.org/test/publicRepo/@latest
+###
+GET http://localhost:8080/http.org/test/publicRepo/@latest
+###
+
+GET http://localhost:8080/ssh.org/test/privateRepo/@latest
+###
+GET http://localhost:8080/http.org/test/privateRepo/@latest
+###
+GET http://localhost:8080/http.org/test/commitRepo/@latest

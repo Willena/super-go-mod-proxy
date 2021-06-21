@@ -42,7 +42,7 @@
                 "type": "privateKey",
                 "password": "",
                 "username": "git",
-                "privateKey": "id_rsa"
+                "privateKey": "C:\\Users\\guill\\Documents\\MobaXterm\\home\\.ssh\\id_rsa"
               }
             },
             "http.org/(.*)": {

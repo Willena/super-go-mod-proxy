@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/willena/super-go-mod-proxy/config"
@@ -24,6 +25,8 @@ var mainConfig *config.Config
 var pluginsInstances *types.PhasesPluginsInstance
 
 var configFile = flag.String("config", "config.json", "Configuration file for super-go-proxy")
+var listen = flag.String("listen", "0.0.0.0", "Configuration file for super-go-proxy")
+var port = flag.String("port", "8080", "Configuration file for super-go-proxy")
 
 func main() {
 	defer logger.Sync()
@@ -45,14 +48,14 @@ func main() {
 	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.info", InfoVersionHandler).Methods("GET")
 	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.mod", ModVersionHandler).Methods("GET")
 	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.zip", ZipVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/@latest", LatestVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@latest", LatestVersionHandler).Methods("GET")
 	http.Handle("/", r)
 
 	srv := &http.Server{
-		Addr:         "0.0.0.0:8080",
+		Addr:         fmt.Sprintf("%s:%s", *listen, *port),
 		WriteTimeout: time.Second * 10,
-		ReadTimeout:  time.Minute * 5,
-		IdleTimeout:  time.Minute * 5,
+		ReadTimeout:  time.Minute * 1,
+		IdleTimeout:  time.Minute * 1,
 		Handler:      r, // Pass our instance of gorilla/mux in.
 	}
 

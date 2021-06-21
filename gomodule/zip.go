@@ -1,4 +1,4 @@
-package modulezip
+package gomodule
 
 import (
 	"archive/zip"

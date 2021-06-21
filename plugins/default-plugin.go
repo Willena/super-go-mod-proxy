@@ -104,7 +104,20 @@ func doFetch(context *types.RunnerContext, w http.ResponseWriter) bool {
 		w.WriteHeader(http.StatusOK)
 		io.Copy(w, read)
 		return true
+	case types.ActionGetLatestVersion:
+		json, err := context.FetchMethod.GetLatestVersion(context.GoModule)
+		if err != nil {
+			logger.Error("Error while fetching version information", zap.Error(err))
+			w.WriteHeader(http.StatusGone)
+			w.Write(errors.GenerateError(err))
+			return true
+		}
 
+		//Forward json directly !
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(json))
+		return true
 	}
 	return false
 }

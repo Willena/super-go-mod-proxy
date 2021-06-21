@@ -35,8 +35,24 @@ func (g *GoProxy) GetVersions(module string) ([]string, error) {
 	return versions, nil
 }
 
-func (g *GoProxy) GetLatestVersion(string) (string, error) {
-	panic("implement me")
+func (g *GoProxy) GetLatestVersion(module string) (string, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/%s/@latest", g.Url, module))
+	if err != nil {
+		logger.With(zap.String("module", module), zap.String("version", "latest"), zap.Error(err)).Error("Could not fetch module version")
+	}
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("no module version found for %s:%s; request status: %d;", module, "latest", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logger.With(zap.String("module", module), zap.String("version", "latest"), zap.Error(err)).Error("Could not read proxy response body")
+	}
+
+	s := string(body)
+	logger.With(zap.String("module", module)).Debug("Found version ", zap.Any("version", "latest"), zap.String("content", s))
+	return s, nil
 }
 
 func (g *GoProxy) GetModule(module string, version string) (string, error) {
@@ -93,5 +109,5 @@ func (g *GoProxy) GetZipFile(module string, version string) (io.Reader, error) {
 }
 
 func (g *GoProxy) Match(url string) bool {
-	panic("implement me")
+	return true
 }
