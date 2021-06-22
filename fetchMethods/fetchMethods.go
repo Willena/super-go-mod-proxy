@@ -21,7 +21,7 @@ func FindForUrl(url string, authConfig types.AuthConfiguration) (types.FetchMeth
 	}
 
 	if strings.HasPrefix(url, "http") {
-		return &GoProxy{"https://proxy.golang.org"}, nil
+		return &GoProxy{url}, nil
 	}
 
 	return nil, fmt.Errorf("Method not found !")
@@ -29,7 +29,6 @@ func FindForUrl(url string, authConfig types.AuthConfiguration) (types.FetchMeth
 
 func sortTags(tags []string) []string {
 	vs := make([]*semver.Version, 0)
-	sortedTags := make([]string, len(tags))
 	for _, r := range tags {
 		v, err := semver.NewVersion(r)
 		if err != nil {
@@ -39,7 +38,7 @@ func sortTags(tags []string) []string {
 		vs = append(vs, v)
 	}
 	sort.Sort(semver.Collection(vs))
-
+	sortedTags := make([]string, len(vs))
 	for i, v := range vs {
 		sortedTags[i] = v.Original()
 	}
