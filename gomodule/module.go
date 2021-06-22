@@ -82,7 +82,7 @@ func parsePrerelease(pre string) *CommitRef {
 	timeAndHash := pre
 	lastIndex := strings.LastIndex(pre, ".")
 	if lastIndex != -1 {
-		timeAndHash = pre[lastIndex:]
+		timeAndHash = pre[lastIndex+1:]
 	}
 
 	splitedTImeAndHash := strings.Split(timeAndHash, "-")
