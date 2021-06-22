@@ -298,7 +298,6 @@ func (g *Git) GetVersionInfo(module *gomodule.GoModule) (string, error) {
 	}
 
 	return versionInfoFromRepo(r, module)
-
 }
 
 func (g *Git) GetZipFile(module *gomodule.GoModule) (io.Reader, error) {

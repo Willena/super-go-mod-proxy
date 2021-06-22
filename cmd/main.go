@@ -86,11 +86,11 @@ func main() {
 func RegisterRoutes(r *mux.Router) {
 	r.Handle("/metrics", promhttp.Handler())
 	r.HandleFunc("/", StatusHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/list", ListVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.info", InfoVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.mod", ModVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@v/{moduleVersion}.zip", ZipVersionHandler).Methods("GET")
-	r.HandleFunc("/{module:[A-Za-z.0-9/]+}/@latest", LatestVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9\\/\\-!_]+}/@v/list", ListVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9\\/\\-!_]+}/@v/{moduleVersion}.info", InfoVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9\\/\\-!_]+}/@v/{moduleVersion}.mod", ModVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9\\/\\-!_]+}/@v/{moduleVersion}.zip", ZipVersionHandler).Methods("GET")
+	r.HandleFunc("/{module:[A-Za-z.0-9\\/\\-!_]+}/@latest", LatestVersionHandler).Methods("GET")
 	http.Handle("/", r)
 }
 

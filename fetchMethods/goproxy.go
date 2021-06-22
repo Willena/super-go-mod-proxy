@@ -56,9 +56,12 @@ func (g *GoProxy) GetLatestVersion(module *gomodule.GoModule) (string, error) {
 }
 
 func (g *GoProxy) GetModule(module *gomodule.GoModule) (string, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/%s/@v/%s.mod", g.Url, module, module.Version.String()))
+	url := fmt.Sprintf("%s/%s/@v/%s.mod", g.Url, module.Path, module.Version.String())
+	logger.With(zap.String("ModuleUrl", url)).Debug("Calling go proxy...")
+	resp, err := http.Get(url)
 	if err != nil {
 		logger.With(zap.String("module", module.Path), zap.String("version", module.Version.String()), zap.Error(err)).Error("Could not fetch module go.mod file")
+		return "", err
 	}
 
 	if resp.StatusCode != 200 {

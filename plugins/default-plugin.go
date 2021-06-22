@@ -77,7 +77,7 @@ func doFetch(context *types.RunnerContext, w http.ResponseWriter) bool {
 
 		return true
 	case types.ActionGetModFile:
-		text, err := context.FetchMethod.GetModule(nil)
+		text, err := context.FetchMethod.GetModule(context.GoModule)
 		if err != nil {
 			logger.Error("Error while fetching version information", zap.Error(err))
 			w.WriteHeader(http.StatusGone)
