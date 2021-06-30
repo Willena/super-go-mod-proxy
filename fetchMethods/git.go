@@ -141,7 +141,7 @@ func (g *Git) GetVersions(module *gomodule.GoModule) ([]string, error) {
 		return nil, err
 	}
 
-	data, err := remote.List(&git.ListOptions{Auth: auth})
+	data, err := remote.List(&git.ListOptions{Auth: auth, InsecureSkipTLS: g.Auth.SkipInsecure})
 	if err != nil {
 		logger.Error("GIT ERROR", zap.Error(err))
 		return nil, err
@@ -195,8 +195,9 @@ func (g *Git) downloadRepo(module *gomodule.GoModule) (*git.Repository, *git.Wor
 	var r *git.Repository
 
 	r, err = git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{
-		URL:  g.Url,
-		Auth: auth,
+		URL:             g.Url,
+		Auth:            auth,
+		InsecureSkipTLS: g.Auth.SkipInsecure,
 	})
 
 	if err != nil {

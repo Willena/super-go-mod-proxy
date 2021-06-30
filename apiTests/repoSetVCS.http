@@ -25,3 +25,5 @@ GET http://localhost:8080/http.org/test/commitRepo/@v/master.info
 GET http://localhost:8080/http.org/test/publicRepo/@v/master.info
 ###
 GET http://localhost:8080/http.org/test/commitRepo/@v/78f2983332.info
+###
+GET http://localhost:8080/http.org/test/publicRepo/@v/list

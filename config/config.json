@@ -50,7 +50,8 @@
               "auth": {
                 "type": "basic",
                 "username": "test",
-                "password": "abc"
+                "password": "abc",
+                "skipInsecure": false
               }
             }
           }
