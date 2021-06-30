@@ -1,5 +1,7 @@
 # Super go mod proxy
 
+![https://img.shields.io/docker/v/gillena/super-go-mod-proxy?color=blue&label=Docker%20Hub](https://img.shields.io/docker/v/gillena/super-go-mod-proxy?color=blue&label=Docker%20Hub)
+
 Yet another go modules proxy
 
 # About
