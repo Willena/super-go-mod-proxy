@@ -21,7 +21,7 @@ func ZipModule(filesystem billy.Filesystem, module *GoModule) (io.Reader, error)
 	w := zip.NewWriter(buf)
 	// Add some files to the archive.
 
-	err := addFiles(w, filesystem, filesystem.Root(), fmt.Sprintf("%s@%s", module, module.Version.String()))
+	err := addFiles(w, filesystem, filesystem.Root(), fmt.Sprintf("%s@%s", module.Path, module.Version.String()))
 	if err != nil {
 		logger.Error("Error while creating zip", zap.Error(err))
 		return nil, err
