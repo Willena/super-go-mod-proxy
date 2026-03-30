@@ -4,8 +4,8 @@ go 1.24.0
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/go-git/go-billy/v5 v5.6.2
-	github.com/go-git/go-git/v5 v5.16.5
+	github.com/go-git/go-billy/v5 v5.8.0
+	github.com/go-git/go-git/v5 v5.17.1
 	github.com/gorilla/mux v1.8.0
 	github.com/prometheus/client_golang v1.11.1
 	github.com/stretchr/testify v1.10.0
