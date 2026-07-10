@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.11.1
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.17.0
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.52.0
 )
 
 require (
